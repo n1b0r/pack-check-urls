@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Split URLs by comma
+urls=${1//,/ }
+
+for url in $urls
+do
+    hostname="${url%%/*}"
+    if [[ "$url" = */* ]]
+    then
+        # Domain plus path, like example.com/path
+        path="/${url#*/}"
+    else
+        # Just domain, like example.com
+        path=/
+    fi
+    result="$(/usr/lib/nagios/plugins/check_http --hostname "$hostname" --url "$path")"
+    status="$?"
+    if [[ "$status" -ne 0 ]]
+    then
+        # First warning is the final result
+        echo "$url: $result"
+        exit "$status"
+    fi
+done
+
+echo "All URLs OK: $urls"
+
